@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/adams-connect/OpenDashTV/internal/config"
+	"github.com/adams-connect/OpenDashTV/web"
 )
 
 // Server coordinates HTTP routing, static asset delivery, and SSE streaming.
@@ -49,6 +50,9 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /setup", s.handleSetup)
 	s.mux.HandleFunc("GET /api/config", s.handleGetConfig)
 	s.mux.HandleFunc("POST /api/config", s.handleSaveConfig)
+
+	// Serve compiled static assets (HTML, CSS, JS) directly from binary
+	s.mux.Handle("/", http.FileServer(http.FS(web.DistFS())))
 }
 
 // Hub returns the active SSE hub for event broadcasting.

@@ -14,6 +14,6 @@ export default defineConfig({
     },
     // Target modern Chromium on Raspberry Pi OS (Chromium 100+)
     target: 'es2022',
-    minify: 'terser',
+    minify: 'esbuild',
   },
 });

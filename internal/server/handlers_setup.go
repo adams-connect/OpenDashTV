@@ -3,12 +3,14 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/adams-connect/OpenDashTV/internal/config"
+	"github.com/adams-connect/OpenDashTV/web"
 	"gopkg.in/yaml.v3"
 )
 
@@ -115,7 +117,15 @@ func (s *Server) handleSaveConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSetup(w http.ResponseWriter, r *http.Request) {
-	// Look for web/setup.html relative to working directory
+	// 1. Try serving from embedded binary assets
+	if data, err := fs.ReadFile(web.DistFS(), "setup.html"); err == nil {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+		return
+	}
+
+	// 2. Fallback to local disk file for live frontend development
 	setupPath := filepath.Join("web", "setup.html")
 	if data, err := os.ReadFile(setupPath); err == nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -124,10 +134,10 @@ func (s *Server) handleSetup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fallback minimal HTML if file not found
+	// 3. Fallback minimal HTML
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`<!DOCTYPE html><html><body><h1>OpenDashTV Setup</h1><p>web/setup.html not found</p></body></html>`))
+	_, _ = w.Write([]byte(`<!DOCTYPE html><html><body><h1>OpenDashTV Setup</h1><p>setup.html not found</p></body></html>`))
 }
 
 func saveConfigToDisk(path string, cfg *config.Config) error {
