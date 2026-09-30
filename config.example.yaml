@@ -1,0 +1,80 @@
+# OpenDashTV Configuration Example
+#
+# Production configuration for OpenDashTV running on Raspberry Pi 3B+ (ARMv7).
+# Copy this file to `config.yaml` to customize settings.
+# All fields can also be overridden using environment variables prefixed with OPENDASH_
+# (e.g. OPENDASH_SERVER_PORT=8080).
+
+server:
+  # TCP port for dashboard HTTP and Server-Sent Events (SSE) streaming.
+  port: 8080
+
+  # Bind address. "0.0.0.0" permits access across the local home subnet,
+  # allowing initial setup and pairing from a phone browser.
+  host: "0.0.0.0"
+
+  # Timeouts protect against slow/hung client connections on home Wi-Fi drops.
+  read_timeout: 15s
+  write_timeout: 15s
+
+display:
+  # Burn-in mitigation for 24/7 TV panels (OLED / Plasma).
+  # Programmatically shifts the main CSS grid container by 1-2 sub-pixels every 10 minutes.
+  burn_in_protection: true
+
+  night_mode:
+    # Automatically dims the kiosk interface during overnight hours.
+    enabled: true
+
+    # Wall-clock start and end times in 24-hour HH:MM format.
+    # Evaluated against the local system clock on the device.
+    start_time: "22:00"
+    end_time: "06:30"
+
+    # Brightness percentage (0-100) applied during night mode hours.
+    # 30% provides comfortable ambient visibility in a dark living room.
+    dim_level: 30
+
+location:
+  # Coordinates used for Open-Meteo REST API queries (no API key required).
+  # If left at 0.0, 0.0 or blank, OpenDashTV boots into the first-run setup portal
+  # displaying a QR code on the TV screen.
+  latitude: 41.8781
+  longitude: -87.6298
+
+  # Optional city label displayed in the top dashboard bar.
+  city: "Chicago, IL"
+
+  # Measurement unit system: "imperial" (Fahrenheit, mph) or "metric" (Celsius, km/h).
+  units: "imperial"
+
+google:
+  # Google Cloud Console OAuth 2.0 Client ID and Secret.
+  # Required for Google Calendar agenda and Gmail unread count widgets.
+  # 
+  # SETUP INSTRUCTIONS FOR HEADLESS PI:
+  # 1. Go to Google Cloud Console (https://console.cloud.google.com).
+  # 2. Create a project and enable "Google Calendar API" and "Gmail API".
+  # 3. Under APIs & Services -> Credentials, create an "OAuth 2.0 Client ID".
+  # 4. Choose Application Type: "TVs and Limited Input devices" (or "Desktop").
+  # 5. Paste the Client ID and Client Secret below.
+  # 
+  # OpenDashTV utilizes the RFC 8628 Device Authorization Grant.
+  # The TV screen will display: "Visit google.com/device and enter code: XXXX-XXXX".
+  # Once authorized from a phone or laptop, tokens are cached locally under tokens/google_token.json (chmod 0600).
+  client_id: ""
+  client_secret: ""
+
+  scopes:
+    - "https://www.googleapis.com/auth/calendar.events.readonly"
+    - "https://www.googleapis.com/auth/gmail.readonly"
+
+traffic:
+  # Commute destination and origin addresses or coordinate pairs.
+  origin: "100 Main St, Chicago, IL"
+  destination: "500 W Madison St, Chicago, IL"
+
+  # Polling interval for traffic estimation.
+  # Default is 15 minutes: balances timely morning commute alerts with
+  # API quota preservation and minimal write cycles on the Pi's MicroSD card.
+  poll_interval: 15m

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OpenDashTV</title>
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <div id="night-dimmer"></div>
+
+  <div id="app-viewport">
+    <!-- Header: Identity, Local City, Connection Status -->
+    <header class="header-bar">
+      <div class="brand-label">OpenDashTV</div>
+      <div id="location-city" style="color: var(--text-secondary); font-size: 26px;">Chicago, IL</div>
+      <div class="status-pill">
+        <span id="connection-dot" class="status-dot"></span>
+        <span id="connection-text">Live</span>
+      </div>
+    </header>
+
+    <!-- Main Grid: Clock, Weather, Google Agenda, Commute -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Clock & Weather -->
+      <section class="panel" style="gap: 24px;">
+        <div>
+          <div class="panel-title">System Time</div>
+          <div id="clock-display" class="clock-display">--:--</div>
+          <div id="date-display" class="date-display">Loading...</div>
+        </div>
+
+        <div style="margin-top: auto; border-top: 1px solid var(--surface-border); padding-top: 20px;">
+          <div class="panel-title">Weather Outlook</div>
+          <div class="weather-hero">
+            <div id="weather-temp" class="temp-large">--°</div>
+            <div>
+              <div id="weather-condition" style="font-size: 28px; font-weight: 600;">Updating...</div>
+              <div id="weather-range" style="font-size: 20px; color: var(--text-secondary);">High: --° · Low: --°</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Agenda & Commute -->
+      <div style="display: flex; flex-direction: column; gap: 28px;">
+        <section class="panel" style="flex: 1;">
+          <div class="panel-title">Today's Agenda</div>
+          <div id="agenda-list" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="color: var(--text-secondary); font-size: 22px;">No upcoming events scheduled.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Commute Duration</div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <div id="commute-time" style="font-size: 42px; font-weight: 700; color: var(--accent-amber);">-- min</div>
+            <div id="commute-status" style="font-size: 20px; color: var(--text-secondary);">Normal conditions</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>

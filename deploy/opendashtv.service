@@ -1,0 +1,30 @@
+[Unit]
+Description=OpenDashTV Kiosk Core Service
+Documentation=https://github.com/adams-connect/OpenDashTV
+# The Pi 3B+ lacks an onboard Real-Time Clock (RTC).
+# Waiting for time-sync.target prevents TLS verification failures and wrong midnight clock calculations on cold boots.
+After=network-online.target time-sync.target
+Wants=network-online.target time-sync.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/opt/opendashtv
+ExecStart=/opt/opendashtv/bin/dashboard-core
+Restart=always
+RestartSec=5s
+
+# Limit CPU and memory consumption to ensure the Chromium kiosk interface has ample headroom
+MemoryMax=100M
+CPUQuota=50%
+
+# Allow sufficient file descriptors for concurrent SSE connections without unbounded bloat
+LimitNOFILE=4096
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=opendashtv
+
+[Install]
+WantedBy=multi-user.target

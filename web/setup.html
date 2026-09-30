@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenDashTV Setup Portal</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --card: #151c24;
+      --border: #232f3d;
+      --text: #f0f4f8;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --success: #34d399;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 24px; max-width: 540px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; color: var(--accent); }
+    p { color: var(--muted); margin-bottom: 24px; font-size: 15px; line-height: 1.5; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .card-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      background: #0b0f14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 14px;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #0b0f14;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    .status-msg { margin-top: 12px; font-size: 14px; text-align: center; display: none; }
+  </style>
+</head>
+<body>
+  <h1>OpenDashTV Setup</h1>
+  <p>Configure your Raspberry Pi TV dashboard appliance from your phone.</p>
+
+  <form id="setup-form">
+    <div class="card">
+      <div class="card-title">Location & Weather</div>
+      <label for="city">City Name</label>
+      <input type="text" id="city" name="city" placeholder="e.g. Chicago, IL" required>
+
+      <div style="display: flex; gap: 12px;">
+        <div style="flex: 1;">
+          <label for="latitude">Latitude</label>
+          <input type="number" step="any" id="latitude" name="latitude" placeholder="41.8781" required>
+        </div>
+        <div style="flex: 1;">
+          <label for="longitude">Longitude</label>
+          <input type="number" step="any" id="longitude" name="longitude" placeholder="-87.6298" required>
+        </div>
+      </div>
+
+      <label for="units">Units</label>
+      <select id="units" name="units">
+        <option value="imperial">Imperial (°F, mph)</option>
+        <option value="metric">Metric (°C, km/h)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Commute Route</div>
+      <label for="origin">Home Origin</label>
+      <input type="text" id="origin" name="origin" placeholder="100 Main St, Chicago, IL">
+
+      <label for="destination">Work Destination</label>
+      <input type="text" id="destination" name="destination" placeholder="500 W Madison St, Chicago, IL">
+    </div>
+
+    <button type="submit">Save Dashboard Settings</button>
+    <div id="status-msg" class="status-msg"></div>
+  </form>
+
+  <script>
+    document.getElementById('setup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status-msg');
+      status.style.display = 'block';
+      status.style.color = 'var(--muted)';
+      status.textContent = 'Saving configuration...';
+
+      const formData = new FormData(e.target);
+      const payload = {
+        city: formData.get('city'),
+        latitude: parseFloat(formData.get('latitude')),
+        longitude: parseFloat(formData.get('longitude')),
+        units: formData.get('units'),
+        origin: formData.get('origin'),
+        destination: formData.get('destination')
+      };
+
+      try {
+        const res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          status.style.color = 'var(--success)';
+          status.textContent = 'Configuration saved! TV will update in real time.';
+        } else {
+          const err = await res.json();
+          status.style.color = 'var(--accent-rose, #f87171)';
+          status.textContent = 'Error: ' + (err.error || 'Failed to save');
+        }
+      } catch (err) {
+        status.style.color = '#f87171';
+        status.textContent = 'Network error reaching dashboard appliance.';
+      }
+    });
+  </script>
+</body>
+</html>
