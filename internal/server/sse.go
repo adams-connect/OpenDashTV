@@ -70,8 +70,23 @@ func (h *Hub) ClientCount() int {
 	return len(h.clients)
 }
 
+// Send dispatches an event directly to a single client connection.
+func (h *Hub) Send(c *Client, event string, data []byte) {
+	msg := fmt.Sprintf("event: %s\ndata: %s\n\n", event, string(data))
+	select {
+	case c.send <- []byte(msg):
+	default:
+	}
+}
+
 // HandleEvents streams Server-Sent Events with keep-alive pings.
 func (h *Hub) HandleEvents(w http.ResponseWriter, r *http.Request) {
+	h.HandleEventsWithConnect(w, r, nil)
+}
+
+// HandleEventsWithConnect allows executing an immediate callback upon client registration
+// to deliver initial dashboard state snapshots without waiting for background tickers.
+func (h *Hub) HandleEventsWithConnect(w http.ResponseWriter, r *http.Request, onConnect func(c *Client)) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
@@ -97,6 +112,10 @@ func (h *Hub) HandleEvents(w http.ResponseWriter, r *http.Request) {
 	// Initial handshake
 	_, _ = fmt.Fprint(w, ": connected\n\n")
 	flusher.Flush()
+
+	if onConnect != nil {
+		onConnect(client)
+	}
 
 	ctx := r.Context()
 	for {

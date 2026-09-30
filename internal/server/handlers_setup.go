@@ -101,15 +101,28 @@ func (s *Server) handleSaveConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	updatedCfg := *s.cfg
 	configPath := s.configPath
+	if configPath == "" {
+		configPath = "config.yaml"
+		s.configPath = configPath
+	}
 	s.mu.Unlock()
 
-	// Persist atomically to disk if a config file location is designated
-	if configPath != "" {
-		if err := saveConfigToDisk(configPath, &updatedCfg); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to write config: %v", err)})
-			return
-		}
+	// Persist atomically to disk so setup configurations survive restarts
+	if err := saveConfigToDisk(configPath, &updatedCfg); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to write config: %v", err)})
+		return
+	}
+
+	// Broadcast updated configuration to all connected TV displays in real time
+	cfgSnapshot := s.safeConfig()
+	if cfgData, err := json.Marshal(cfgSnapshot); err == nil {
+		s.hub.Broadcast("config", cfgData)
+	}
+
+	// Trigger immediate refresh of weather and traffic for the new coordinates
+	if s.coordinator != nil {
+		s.coordinator.TriggerRefresh(r.Context())
 	}
 
 	w.WriteHeader(http.StatusOK)

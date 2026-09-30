@@ -61,18 +61,18 @@ func main() {
 			cfg.Display.NightMode.StartTime, cfg.Display.NightMode.EndTime, cfg.Display.NightMode.DimLevel)
 	}
 
-	srv := server.NewServer(cfg, targetPath)
-
-	// Start HTTP listener in background goroutine
-	go func() {
-		if err := srv.Start(); err != nil {
-			log.Fatalf("HTTP server failure: %v", err)
-		}
-	}()
-
 	// Trap process termination signals for graceful drain
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	srv := server.NewServer(cfg, targetPath)
+
+	// Start HTTP listener and widget coordinator in background goroutine
+	go func() {
+		if err := srv.Start(ctx); err != nil {
+			log.Fatalf("HTTP server failure: %v", err)
+		}
+	}()
 
 	<-ctx.Done()
 	log.Println("Shutdown signal received; draining active connections...")
